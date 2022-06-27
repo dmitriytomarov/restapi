@@ -42,27 +42,20 @@ orders  товар/количество товар / количство това
         /// <returns></returns>
         [HttpGet("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders(int id)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<Order>>> GetOrders(int id, DateTime? dateFrom=null, DateTime? dateTo=null)
         {
+            if (_context.Orders == null) return NotFound("Таблица Orders не найдена");
+            
+            var orders = await _context.Orders.Where(e => e.Id == id).OrderBy(e => e.OrderDate).ToListAsync();
 
-            return await _context.Orders.Where(e => e.Id == id).OrderBy(e=> e.OrderDate).ToListAsync();
+            if (dateFrom == null && dateTo == null) return orders;
 
-        }
+            if (dateTo == null) dateTo = DateTime.Now;
+            if (dateFrom == null) dateFrom = DateTime.MinValue;
 
-        [HttpGet("/bydate")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IEnumerable<Order>> GetOrdersByDate(DateTime datefrom, string? date2=null )
-        {
-            Debug.WriteLine("AAAAAAAAAAA");
-            Debug.WriteLine(datefrom);
-            return await _context.Orders.ToListAsync();
-        }
+            return orders.Where(e => e.OrderDate >= dateFrom).ToList();
 
-
-        [HttpGet("{firstName}/{lastName}/{address}")]
-        public string GetQuery(string id, string firstName, string lastName, string address)
-        {
-            return $"{firstName}:{lastName}:{address}";
         }
 
 
