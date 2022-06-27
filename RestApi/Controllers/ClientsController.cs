@@ -34,12 +34,12 @@ namespace RestApi.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Client>> GetClient(int? id)  
+        public async Task<ActionResult<Client>> GetClient(int id)  
         {
-            if (id == null || _context.Clients == null) { return NotFound(); }
+            if (_context.Clients == null)  return NotFound($"Клиент с Id '{id}' не найден."); 
 
             var client = await _context.Clients.FindAsync(id);
-            if (client == null) { return NotFound(); }
+            if (client == null) { return NotFound($"Клиент с Id '{id}' не найден."); }
 
             return client;
         }

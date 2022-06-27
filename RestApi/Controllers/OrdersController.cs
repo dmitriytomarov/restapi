@@ -1,5 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using RestApi.Models;
+using System.Diagnostics;
+using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace RestApi.Controllers
 {
@@ -24,7 +30,38 @@ orders  товар/количество товар / количство това
 
     [Route("[controller]")]
     [ApiController]
-    public class OrdersController : ControllerBase
+    public class OrdersController : Controller
     {
+
+        private readonly ShopContext _context;
+        public OrdersController(ShopContext context) { _context = context; }
+
+        /// <summary>
+        /// Получение списка всех заказов по клиенту (по Id клиента)
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Order>>> GetOrders(int id)
+        {
+
+            return await _context.Orders.Where(e => e.Id == id).OrderBy(e=> e.OrderDate).ToListAsync();
+
+        }
+
+        [HttpGet("{datefrom:DateTime}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IEnumerable<Order>> GetOrdersByDate()
+        {
+            return await _context.Orders.ToListAsync();
+        }
+
+
+
+
+
+
+
+
     }
 }
