@@ -48,14 +48,14 @@ orders  товар/количество товар / количство това
         {
             if (_context.Orders == null) return NotFound("Таблица Orders не найдена");
             
-            var orders = await _context.Orders.Where(e => e.Id == id).OrderBy(e => e.OrderDate).ToListAsync();
+            var orders = await _context.Orders.Where(e => e.Client == id).OrderBy(e => e.OrderDate).ToListAsync();
 
             if (dateFrom == null && dateTo == null) return orders;
 
             if (dateTo == null) dateTo = DateTime.Now;
             if (dateFrom == null) dateFrom = DateTime.MinValue;
 
-            return orders.Where(e => e.OrderDate >= dateFrom).ToList();
+            return orders.Where(e=> (e.OrderDate >= dateFrom && e.OrderDate <= dateTo)).ToList();
         }
 
 
