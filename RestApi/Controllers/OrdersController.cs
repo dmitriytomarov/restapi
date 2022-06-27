@@ -49,15 +49,21 @@ orders  товар/количество товар / количство това
 
         }
 
-        [HttpGet("{datefrom:DateTime}")]
+        [HttpGet("/bydate")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IEnumerable<Order>> GetOrdersByDate()
+        public async Task<IEnumerable<Order>> GetOrdersByDate(DateTime datefrom, string? date2=null )
         {
+            Debug.WriteLine("AAAAAAAAAAA");
+            Debug.WriteLine(datefrom);
             return await _context.Orders.ToListAsync();
         }
 
 
-
+        [HttpGet("{firstName}/{lastName}/{address}")]
+        public string GetQuery(string id, string firstName, string lastName, string address)
+        {
+            return $"{firstName}:{lastName}:{address}";
+        }
 
 
 

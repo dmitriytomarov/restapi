@@ -99,7 +99,7 @@ namespace RestApi.Controllers
                     case "price":
                         sort = " ORDER BY Goods.Price"; break;
                     case "pricedesc":
-                        sort = " ORDER BY Goods.Price DESCENDING"; break;
+                        sort = " ORDER BY Goods.Price DESC"; break;
                     default:
                         return BadRequest($"Ошибка: значение sort '{parameters["sort"]}' не поддердживается");
                 }
@@ -119,6 +119,67 @@ namespace RestApi.Controllers
         }
 
 
+        /// <summary>
+        /// Вариант 2 (Отдельными полями). Получение списка товаров, с возможностью фильтрации по типу товара, по наличию на складе и сортировки по цене
+        /// </summary>
+        /// <remarks>
+        /// Строка запроса может содержать параметры: "category", "minstock", "sort".
+        /// category - имя категории (string).
+        /// minstock - требуемое количество на складе (int).
+        /// sort - сортировка (string). Возможные значения:  price (сортировка по возрастанию цены), pricedesc (сортировка по убыванию цены)
+        /// </remarks>
+        /// <param>
+        /// Параметры  <br/> 
+        /// category  (Cat1, Cat2, Cat3, Cat4). Название категории <br/> 
+        /// minstock  (int).  Требуемое к наличию на складе количество 
+        /// sort     Возможные знначения: price (по возрастанию цены),  pricedesc (по убыванию цены)
+        /// </param>
+        /// <returns></returns>
+        [HttpGet("filterVar2/")]
+        public async Task<ActionResult<IEnumerable<Good>>> GetGoodsByVar2(string? category =null, string? minstock=null, string? sort=null)
+        {
+
+            StringBuilder where = new();
+            List<string> whereConditions = new();
+
+            if (!String.IsNullOrEmpty(category))
+            {
+                whereConditions.Add($@"Categories.CategoryName = '{category}'");
+            }
+
+            if (!String.IsNullOrEmpty(minstock))  
+            {
+                if (!int.TryParse(minstock, out _)) return BadRequest("Количество на складе: неверный формат");
+                whereConditions.Add($@"Goods.Stock >= {minstock}");
+            }
+
+            where.Append(whereConditions.Count > 0 ? "WHERE " : "").Append(String.Join(" And ", whereConditions));
+
+            if (!String.IsNullOrEmpty(sort))
+            {
+                switch (sort)
+                {
+                    case "price":
+                        sort = " ORDER BY Goods.Price"; break;
+                    case "pricedesc":
+                        sort = " ORDER BY Goods.Price DESC"; break;
+                    default:
+                        return BadRequest($"Ошибка: значение sort '{sort}' не поддердживается");
+                }
+            }
+
+            string request = @$"SELECT Goods.Id,
+                                         Goods.Category,
+                                         Goods.Price,
+                                         Goods.Stock,
+                                         Categories.CategoryName,
+                                         Goods.Name
+                                    FROM Goods 
+                                    JOIN Categories on Goods.Category = Categories.Id {where} {sort}";
+
+
+            return await _context.Goods.FromSqlRaw(request).ToListAsync();
+        }
 
     }
 }
