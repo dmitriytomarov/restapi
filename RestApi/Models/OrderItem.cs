@@ -1,6 +1,6 @@
 ﻿namespace RestApi.Models
 {
-    public class OrderBom
+    public class OrderItem
     {
         public int Id { get; set; }
         public int Position { get; set; }

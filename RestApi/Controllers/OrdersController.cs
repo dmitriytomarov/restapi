@@ -59,7 +59,103 @@ orders  товар/количество товар / количство това
             return orders.Where(e=> (e.OrderDate >= dateFrom && e.OrderDate <= dateTo)).ToList();
         }
 
-        //[HttpPost("{new}")]
+        /// <summary>
+        /// Создание нового заказа
+        /// </summary>
+        /// <remarks>Входные данные: перечень в формате JSON:  id товара, количество товара</remarks>
+        /// <param name=""></param>
+        /// <returns></returns>
+        [HttpPost("new")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(StatusCodes.Status406NotAcceptable)]
+        public async Task<ActionResult<IEnumerable<OrderItem>>> CreateOrder(List<ItemsDTO> bom)
+        //public async Task<IActionResult<IEnumerable<OrderItem>>> CreateOrder(List<ItemsDTO> bom)
+        {
+            List<int> requestedIds = new();
+            List<int> requestedQty = new();
+            List<Good> requestedGoods = new();
+            List<OrderItem> order = new();
+            bool flag = true;
+
+            foreach (var item in bom)
+            {
+                try
+                {
+                    requestedIds.Add(item.Id);
+                    requestedQty.Add(item.Amount);
+                    if (item.Id <= 0) return BadRequest($"Ошибка: некорректное значение Id:  '{item.Id}'");
+                }
+                catch (Exception)
+                {
+                    //requestedIds.Clear();
+                    //requestedQty.Clear();
+                    return BadRequest("Ошибка: некорректное значение Id или количества");
+                }
+            }
+            if (!requestedIds.Any()) return BadRequest("Пустой запрос");
+
+            string set = string.Join(", ", requestedIds);
+            string request = @$"SELECT * FROM Goods WHERE Goods.Id IN ({set})";
+
+            requestedGoods = await _context.Goods.FromSqlRaw(request).ToListAsync();
+            //выборка из БД всех товаров которые запрошены
+
+            
+            Good good;
+            OrderItem line;
+            int position = 1;
+            for (int i = 0; i < requestedIds.Count; i++)
+            {
+                good = requestedGoods.FirstOrDefault(e => e.Id == requestedIds[i])!;
+                if (requestedQty[i] <= good?.Stock)
+                {
+
+                    line = new OrderItem
+                    {
+                        Position = position++,
+                        OrderId = 1,
+                        GoodId = good.Id,
+                        Price = good.Price,
+                        Amount = requestedQty[i]
+                    };
+                    //_context.OrderItems.Add(new OrderItem   // если итоговый заказ не надо в вывод то оставить так 
+                    //{
+                    //    Position = position++,
+                    //    OrderId = 1,
+                    //    GoodId = good.Id,
+                    //    Price = good.Price,
+                    //    Amount = requestedQty[i]
+                    //});
+
+                    _context.OrderItems.Add(line);
+                    order.Add(line); // для вывода в JSON резалт. если не надо то убрать
+
+                    Debug.WriteLine($"добавлен bl {good.Id}  цена {good.Price} количество {good.Stock}");
+                    good.Stock -= requestedQty[i];
+                    Debug.WriteLine($"количество  {good.Id}  уменьшено на  {requestedQty[i]} новое колво  {good.Stock}");
+                }
+                else
+                {
+                    Debug.WriteLine($"количество недостаточно товар ид {good.Id}  складк {good.Stock}");
+                    return BadRequest($"Отклонено:  Недостаточное количество на складе для Id'{good.Id}'");
+                }
+            }
+
+            if (flag)
+            {
+                foreach (var item in requestedGoods)
+                {
+                    _context.Goods.FirstOrDefault(e => e.Id == item.Id)!.Stock = item.Stock;
+                    Debug.WriteLine($"флаг    количество для {item.Id} новое = {item.Stock}");
+                }
+                _context.SaveChanges();
+            }
+
+
+            return order;
+        }
+
 
 
 
