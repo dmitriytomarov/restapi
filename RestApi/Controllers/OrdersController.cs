@@ -72,9 +72,10 @@ orders  товар/количество товар / количство това
         public async Task<ActionResult<IEnumerable<OrderItem>>> CreateOrder(List<ItemsDTO> bom)
         //public async Task<IActionResult<IEnumerable<OrderItem>>> CreateOrder(List<ItemsDTO> bom)
         {
-            List<int> requestedIds = new();
-            List<int> requestedQty = new();
-            List<Good> requestedGoods = new();
+            //List<int> requestedIds = new();
+            //List<int> requestedQty = new();
+            Dictionary<int, int> requested = new(); //то что запрошено клиентом (поля id и количество)
+            List<Good> requestedGoods = new(); // запрошенные товары, выборка из БД (все поля)
             List<OrderItem> order = new();
             bool flag = true;
 
@@ -82,65 +83,67 @@ orders  товар/количество товар / количство това
             {
                 try
                 {
-                    requestedIds.Add(item.Id);
-                    requestedQty.Add(item.Amount);
+                    if (!requested.ContainsKey(item.Id))
+                    {
+                        requested.Add(item.Id, item.Amount);
+                    }
+                    else
+                    {
+                        requested[item.Id] += item.Amount;
+                    }
+                        //requestedIds.Add(item.Id);
+                    //requestedQty.Add(item.Amount);
                     if (item.Id <= 0) return BadRequest($"Ошибка: некорректное значение Id:  '{item.Id}'");
                 }
                 catch (Exception)
                 {
-                    //requestedIds.Clear();
-                    //requestedQty.Clear();
                     return BadRequest("Ошибка: некорректное значение Id или количества");
                 }
             }
-            if (!requestedIds.Any()) return BadRequest("Пустой запрос");
+            if (!requested.Any()) return BadRequest("Пустой запрос");
 
-            string set = string.Join(", ", requestedIds);
+            string set = string.Join(", ", requested.Keys);
             string request = @$"SELECT * FROM Goods WHERE Goods.Id IN ({set})";
 
             requestedGoods = await _context.Goods.FromSqlRaw(request).ToListAsync();
-            //выборка из БД всех товаров которые запрошены
+            //выборка из БД запрошенных товаров
 
             
             Good good;
             OrderItem line;
             int position = 1;
-            for (int i = 0; i < requestedIds.Count; i++)
-            {
-                good = requestedGoods.FirstOrDefault(e => e.Id == requestedIds[i])!;
-                if (requestedQty[i] <= good?.Stock)
-                {
 
-                    line = new OrderItem
+            foreach (var i in requested)
+            {
+                good = requestedGoods.FirstOrDefault(e => e.Id == i.Key)!;
+
+                if (i.Value <= good?.Stock)
+                {
+                    if (i.Value < 0) return BadRequest($"Ошибка:  Отрицательное количество для товара с Id '{i.Key}'");
+                    if (i.Value == 0) continue;
+                    line = new OrderItem  // для вывода потом в итог. можно убрать если вывод не нужен.
                     {
                         Position = position++,
                         OrderId = 1,
                         GoodId = good.Id,
                         Price = good.Price,
-                        Amount = requestedQty[i]
+                        Amount = i.Value
                     };
-                    //_context.OrderItems.Add(new OrderItem   // если итоговый заказ не надо в вывод то оставить так 
-                    //{
-                    //    Position = position++,
-                    //    OrderId = 1,
-                    //    GoodId = good.Id,
-                    //    Price = good.Price,
-                    //    Amount = requestedQty[i]
-                    //});
-
+                    
                     _context.OrderItems.Add(line);
                     order.Add(line); // для вывода в JSON резалт. если не надо то убрать
 
                     Debug.WriteLine($"добавлен bl {good.Id}  цена {good.Price} количество {good.Stock}");
-                    good.Stock -= requestedQty[i];
-                    Debug.WriteLine($"количество  {good.Id}  уменьшено на  {requestedQty[i]} новое колво  {good.Stock}");
+                    good.Stock -= i.Value;
+                    Debug.WriteLine($"количество  {good.Id}  уменьшено на  {i.Value} новое колво  {good.Stock}");
                 }
                 else
                 {
                     Debug.WriteLine($"количество недостаточно товар ид {good.Id}  складк {good.Stock}");
-                    return BadRequest($"Отклонено:  Недостаточное количество на складе для Id'{good.Id}'");
+                    return BadRequest($"Отклонено:  Недостаточное количество на складе для Id '{good.Id}'");
                 }
             }
+            if (!order.Any()) return BadRequest("Ошибка: пустой заказ");
 
             if (flag)
             {
