@@ -68,12 +68,8 @@ orders  товар/количество товар / количство това
         [HttpPost("new")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(StatusCodes.Status406NotAcceptable)]
         public async Task<ActionResult<IEnumerable<OrderItem>>> CreateOrder(List<ItemsDTO> bom)
-        //public async Task<IActionResult<IEnumerable<OrderItem>>> CreateOrder(List<ItemsDTO> bom)
         {
-            //List<int> requestedIds = new();
-            //List<int> requestedQty = new();
             Dictionary<int, int> requested = new(); //то что запрошено клиентом (поля id и количество)
             List<Good> requestedGoods = new(); // запрошенные товары, выборка из БД (все поля)
             List<OrderItem> order = new();
@@ -91,8 +87,7 @@ orders  товар/количество товар / количство това
                     {
                         requested[item.Id] += item.Amount;
                     }
-                        //requestedIds.Add(item.Id);
-                    //requestedQty.Add(item.Amount);
+
                     if (item.Id <= 0) return BadRequest($"Ошибка: некорректное значение Id:  '{item.Id}'");
                 }
                 catch (Exception)
@@ -105,13 +100,12 @@ orders  товар/количество товар / количство това
             string set = string.Join(", ", requested.Keys);
             string request = @$"SELECT * FROM Goods WHERE Goods.Id IN ({set})";
 
-            requestedGoods = await _context.Goods.FromSqlRaw(request).ToListAsync();
-            //выборка из БД запрошенных товаров
+            requestedGoods = await _context.Goods.FromSqlRaw(request).ToListAsync();  //выборка из БД запрошенных товаров
 
-            
             Good good;
             OrderItem line;
             int position = 1;
+            int orderMaxId = await _context.Orders.Select(e => e.Id).MaxAsync();
 
             foreach (var i in requested)
             {
@@ -124,7 +118,7 @@ orders  товар/количество товар / количство това
                     line = new OrderItem  // для вывода потом в итог. можно убрать если вывод не нужен.
                     {
                         Position = position++,
-                        OrderId = 1,
+                        OrderId = orderMaxId + 1,
                         GoodId = good.Id,
                         Price = good.Price,
                         Amount = i.Value
@@ -155,12 +149,7 @@ orders  товар/количество товар / количство това
                 _context.SaveChanges();
             }
 
-
             return order;
         }
-
-
-
-
     }
 }
