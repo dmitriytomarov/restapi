@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 //builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddDbContext<ShopContext>(opt => opt.UseSqlServer(@"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog=Shop; Integrated Security = True;"));
+builder.Services.AddDbContext<ShopContext>(opt => opt.UseSqlServer(@"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog=Shop231730; Integrated Security = True;"));
 
 builder.Services.AddSwaggerGen(config =>
     {

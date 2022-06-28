@@ -5,31 +5,21 @@ using RestApi.Models;
 
 namespace RestApi.Controllers
 {
-    //[ApiController]
-    //[Route("[controller]")]
+    [ApiController]
+    [Route("Categories")]
     public class CategoryController : Controller
     {
         private readonly ShopContext _context;
+        public CategoryController(ShopContext context) { _context = context; }
 
-        public CategoryController(ShopContext context)
+        /// <summary>
+        /// Получение списка всех категорий
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Category>>> GetCategories() 
         {
-            _context = context;
-        }
-
-
-
-        //[HttpGet("categ")]
-        //public async Task<IActionResult> Details(int? id)
-        //public async Task<ActionResult<IEnumerable<Client>>> Details(int? id)  //работает11
-        public async Task<ActionResult<Category>> Cat(int? id)  //работает22
-        {
-
-
-
-            return await _context.Categories.FirstOrDefaultAsync(m => m.Id == id);// работает22
-
-            
-
+            return await _context.Categories.ToListAsync();
         }
     }
 }
