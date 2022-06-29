@@ -74,7 +74,7 @@ orders  товар/количество товар / количство това
             List<Good> requestedGoods = new(); // запрошенные товары, выборка из БД (все поля)
             List<OrderItem> order = new();
             bool flag = true;
-
+            int currentUserId = 7;  // ИД залогиненного клиента
             foreach (var item in bom)
             {
                 try
@@ -105,7 +105,10 @@ orders  товар/количество товар / количство това
             Good good;
             OrderItem line;
             int position = 1;
-            int orderMaxId = await _context.Orders.Select(e => e.Id).MaxAsync();
+
+            Order newOrder = new Order { Client = currentUserId, OrderDate = DateTime.Now };
+            _context.Orders.Add(newOrder);
+            await _context.SaveChangesAsync(); // номер заказа занимаем в БД сразу чтобы исключить конфликты. 
 
             foreach (var i in requested)
             {
@@ -115,10 +118,10 @@ orders  товар/количество товар / количство това
                 {
                     if (i.Value < 0) return BadRequest($"Ошибка:  Отрицательное количество для товара с Id '{i.Key}'");
                     if (i.Value == 0) continue;
-                    line = new OrderItem  // для вывода потом в итог. можно убрать если вывод не нужен.
+                    line = new OrderItem  // для вывода потом в итог. можно убрать переменную если вывод не нужен.
                     {
                         Position = position++,
-                        OrderId = orderMaxId + 1,
+                        OrderId = newOrder.Id,
                         GoodId = good.Id,
                         Price = good.Price,
                         Amount = i.Value
@@ -126,14 +129,12 @@ orders  товар/количество товар / количство това
                     
                     _context.OrderItems.Add(line);
                     order.Add(line); // для вывода в JSON резалт. если не надо то убрать
-
-                    Debug.WriteLine($"добавлен bl {good.Id}  цена {good.Price} количество {good.Stock}");
                     good.Stock -= i.Value;
-                    Debug.WriteLine($"количество  {good.Id}  уменьшено на  {i.Value} новое колво  {good.Stock}");
                 }
                 else
                 {
-                    Debug.WriteLine($"количество недостаточно товар ид {good.Id}  складк {good.Stock}");
+                    _context.Orders.Remove(newOrder);
+                    await _context.SaveChangesAsync(); // удаляем заказ из БД. можно не удалять, оставить пустой
                     return BadRequest($"Отклонено:  Недостаточное количество на складе для Id '{good.Id}'");
                 }
             }
@@ -146,10 +147,10 @@ orders  товар/количество товар / количство това
                     _context.Goods.FirstOrDefault(e => e.Id == item.Id)!.Stock = item.Stock;
                     Debug.WriteLine($"флаг    количество для {item.Id} новое = {item.Stock}");
                 }
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
-            return order;
+            return Created("", order);
         }
     }
 }
