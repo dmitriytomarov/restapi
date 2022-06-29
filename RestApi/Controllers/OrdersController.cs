@@ -10,21 +10,7 @@ using Microsoft.AspNetCore.Http;
 namespace RestApi.Controllers
 {
 
-
-    /*
-
-
-
-4)	Метод формирования заказа с проверкой наличия требуемого количества товара на складе, а также уменьшение доступного количества товара
-    на складе в БД в случае успешного создания заказа. 
-post
-orders  товар/количество товар / количство товар количество
-возврат ок частично или нет
- * 
- * */
-
-
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class OrdersController : Controller
     {

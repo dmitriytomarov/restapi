@@ -11,7 +11,7 @@ using RestApi.Models;
 namespace RestApi.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
     public class ClientsController : Controller
     {
         private readonly ShopContext _context;

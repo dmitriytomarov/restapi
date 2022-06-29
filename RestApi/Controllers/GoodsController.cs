@@ -11,7 +11,7 @@ namespace RestApi.Controllers
 {
 
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
     public class GoodsController : Controller
     {
         private readonly ShopContext _context;
@@ -135,7 +135,7 @@ namespace RestApi.Controllers
         /// sort     Возможные знначения: price (по возрастанию цены),  pricedesc (по убыванию цены)
         /// </param>
         /// <returns></returns>
-        [HttpGet("filterVar2/")]
+        [HttpGet("filter/")]
         public async Task<ActionResult<IEnumerable<Good>>> GetGoodsByVar2(string? category =null, string? minstock=null, string? sort=null)
         {
 

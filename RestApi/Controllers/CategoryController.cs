@@ -6,7 +6,7 @@ using RestApi.Models;
 namespace RestApi.Controllers
 {
     [ApiController]
-    [Route("Categories")]
+    [Route("api/v1/categories")]
     public class CategoryController : Controller
     {
         private readonly ShopContext _context;
