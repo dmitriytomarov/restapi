@@ -23,6 +23,7 @@ namespace RestApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IEnumerable<Client>> GetAllClients()
         {
             return   await _context.Clients.ToListAsync();
@@ -34,6 +35,8 @@ namespace RestApi.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Client>> GetClient(int id)  
         {
             if (_context.Clients == null)  return NotFound($"Клиент с Id '{id}' не найден."); 

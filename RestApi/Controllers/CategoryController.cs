@@ -25,6 +25,7 @@ namespace RestApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories() 
         {
             List<Category> categories = new();

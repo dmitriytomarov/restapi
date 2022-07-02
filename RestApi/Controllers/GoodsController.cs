@@ -48,6 +48,8 @@ namespace RestApi.Controllers
         /// </param>
         /// <returns></returns>
         [HttpGet("filter/{querystring}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<Good>>> GetGoodsBy(string? querystring = "")
         {
 
@@ -138,6 +140,8 @@ namespace RestApi.Controllers
         /// </param>
         /// <returns></returns>
         [HttpGet("filter/")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<GoodCategoryDTO>>> GetGoodsByVar2(string? category =null, string? minstock=null, string? sort=null)
         {
 
@@ -189,8 +193,9 @@ namespace RestApi.Controllers
             {
                 result.Add(new GoodCategoryDTO
                 {
+                    Id = tableGoog[j].Id,
                     GoodName = tableGoog[j].Name!,
-                    CatName = tableCategory[j].CategoryName!,
+                    CategoryName = tableCategory[j].CategoryName!,
                     Stock = tableGoog[j].Stock,
                     Price = tableGoog[j].Price
                 });
