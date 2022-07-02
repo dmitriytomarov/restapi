@@ -61,6 +61,7 @@ namespace RestApi.Controllers
 
                 foreach (var item in q)
                 {
+                    if (!item.Contains("=")) return BadRequest($"Ошибка в строке запроса '{item}'");
                     string key = item.Split('=')[0];
                     string value = item.Split('=')[1];
                     if (valids.Contains(key)) // если указан параметр кроме валидных - просто игнорируем. можно сделать тоже BadRequest (??)
