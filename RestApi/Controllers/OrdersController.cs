@@ -84,9 +84,10 @@ namespace RestApi.Controllers
             if (!requested.Any()) return BadRequest("Пустой запрос");
 
             string set = string.Join(", ", requested.Keys);
-            string request = @$"SELECT * FROM Goods WHERE Goods.Id IN ({set})";
+            SqlParameter setPar = new SqlParameter("@set", set);
+            string request = @$"SELECT * FROM Goods WHERE Goods.Id IN (@set)";
 
-            requestedGoods = await _context.Goods.FromSqlRaw(request).ToListAsync();  //выборка из БД запрошенных товаров
+            requestedGoods = await _context.Goods.FromSqlRaw(request,setPar).ToListAsync();  //выборка из БД запрошенных товаров
 
             Good good;
             OrderItem line;
@@ -131,7 +132,6 @@ namespace RestApi.Controllers
                 foreach (var item in requestedGoods)
                 {
                     _context.Goods.FirstOrDefault(e => e.Id == item.Id)!.Stock = item.Stock;
-                    Debug.WriteLine($"флаг    количество для {item.Id} новое = {item.Stock}");
                 }
                 await _context.SaveChangesAsync();
             }
