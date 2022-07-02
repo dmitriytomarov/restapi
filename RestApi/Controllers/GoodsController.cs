@@ -143,31 +143,18 @@ namespace RestApi.Controllers
             StringBuilder where = new();
             List<string> whereConditions = new();
 
-            //if (!String.IsNullOrEmpty(category))
-            //{
-                whereConditions.Add($@"Categories.CategoryName LIKE @category");
-            //}
-            //if (!String.IsNullOrEmpty(minstock))  
-            //{
-            
-            //перенести в начало
             if ((minstock!=null) && !int.TryParse(minstock, out _)) return BadRequest("Количество на складе: неверный формат");
-                whereConditions.Add($@"Goods.Stock >= @minstock");
-            //}
             
+                whereConditions.Add($@"Categories.CategoryName LIKE @category");
+                whereConditions.Add($@"Goods.Stock >= @minstock");
 
             where.Append(whereConditions.Count > 0 ? "WHERE " : "").Append(String.Join(" And ", whereConditions));
-            //string whereString = where.ToString();
 
-            //if (where.Contains("jkjk"))
             if (String.IsNullOrEmpty(category)) category = "%";
             if (String.IsNullOrEmpty(minstock)) minstock = "0";
             SqlParameter categoryPar = new SqlParameter("@category", category);
             SqlParameter minstockPar = new SqlParameter("@minstock", minstock);
             Dictionary<string, object> pars = new();
-            //pars.Add("@category", category!);
-            
-
 
             if (!String.IsNullOrEmpty(sort))
             {
@@ -191,29 +178,23 @@ namespace RestApi.Controllers
                                     FROM Goods
                                     JOIN Categories on Goods.Category = Categories.Id {where} {sort}";
 
-            //string request = @$"SELECT Goods.Id,
-            //                             Goods.Category,
-            //                             Goods.Price,
-            //                             Goods.Stock,
-            //                             Categories.CategoryName,
-            //                             Goods.Name
-            //                        FROM Goods 
-            //                        JOIN Categories on Goods.Category = Categories.Id";
 
-            //var sql1 = _context.Categories.FromSqlRaw(request).Select(e=>e.CategoryName);
-            //if (!String.IsNullOrEmpty(category)) sql1 = sql1.
-            var s1Goog= await _context.Goods.FromSqlRaw(request, categoryPar, minstockPar).ToListAsync();
-            var s2Cat= await _context.Categories.FromSqlRaw(request, categoryPar, minstockPar).ToListAsync();
-            int j = 0;
+            var tableGoog= await _context.Goods.FromSqlRaw(request, categoryPar, minstockPar).ToListAsync();
+            var tableCategory = await _context.Categories.FromSqlRaw(request, categoryPar, minstockPar).ToListAsync();
+
             List<GoodCategoryDTO> result = new();
-            foreach (var item in s1Goog)
+
+            for (int j=0; j<tableGoog.Count; j++)
             {
-                Debug.WriteLine(item.Category);
-                Debug.WriteLine($" из категории {s2Cat[j].CategoryName}");
-                result.Add(new GoodCategoryDTO { GoodName = s1Goog[j].Name, CatName = s2Cat[j++].CategoryName });
+                result.Add(new GoodCategoryDTO
+                {
+                    GoodName = tableGoog[j].Name!,
+                    CatName = tableCategory[j].CategoryName!,
+                    Stock = tableGoog[j].Stock,
+                    Price = tableGoog[j].Price
+                });
             }
 
-            //var s2 = 
 
             //return await _context.Goods.FromSqlRaw(request, categoryPar, minstockPar).ToListAsync();
             return result;
